@@ -24,11 +24,11 @@
   <script>
     dx= [0, 0, 1, -1]
     dy= [1, -1, 0 ,0]
-    max_diff= 10    // the maximum difference between 2 neighbouring cells
+    max_diff= 5    // the maximum difference between 2 neighbouring cells
     init_value= 0   // initial value for array generation
 
-    function dfs(generated, grid, visited, x, y, isIncreasing){
-      console.log(x + " " + y + " " + isIncreasing + " " + generated[x][y])
+    function dfs(generated, grid, visited, x, y, isIncreasing, prev_temperature, ind){
+      console.log(x + " " + y + " " + " " + isIncreasing + " " + generated[x][y])
       visited[x][y]= true
       for(var i= 0; i< 4; i++){
         var u= x+dx[i];
@@ -37,10 +37,28 @@
           if(isIncreasing){ // monotonically increasing
             generated[u][v]= Math.random()*2*max_diff + generated[x][y] - max_diff;
             var nextIsIncreasing= generated[u][v] > generated[x][y];
-            dfs(generated, grid, visited, u, v, nextIsIncreasing);
+            
+            if(nextIsIncreasing) {  // Continue to push and increment the index
+              prev_temperature.push(generated[u][v]);
+              ind++;
+            } else { // Starting from this point you must take the last value from the prev_temp and decrement so the next cell does the same
+              generated[u][v]= prev_temperature[ind];
+              ind--;
+            }
+            
+            dfs(generated, grid, visited, u, v, nextIsIncreasing, prev_temperature, ind);
+            
+            if(nextIsIncreasing) {  // Reverse the action of the previous if
+              prev_temperature.pop();
+              ind--;
+            }
+            
           } else { // monotonically decreasing
             generated[u][v]= Math.random()*max_diff + generated[x][y] - max_diff
-            dfs(generated, grid, visited, u, v, false); 
+            if(ind >= 0){
+              generated[u][v]= prev_temperature[ind];
+            }
+            dfs(generated, grid, visited, u, v, false, prev_temperature, ind-1); 
           }
         }
       }
@@ -54,36 +72,36 @@
         data: {
           messages: [],
           grid: [
-            // "#########################",
-            // "############...##########",
-            // "#############.###########",
-            // "#######..........########",
-            // "#######.########.########",
-            // "#######.########.########",
-            // "##.####.########.########",
-            // "##......########.########",
-            // "##.#############.##.#####",
-            // "################....#####",
-            // "################.##.#####",
-            // "################.########",
-            // "#########........########",
-            // "#########.######.########",
-            // "#########.#####...#######",
-            // "#########.###############",
-            // "#########.###############",
-            // "########...##############",
-            // "#########################",
-            // "#########################",
-            // "#########################",
-            // "#########################",
-            // "#########################",
-            // "#########################",
-            // "#########################"
-            "###.#",
-            "#...#",
-            "###.#",
-            "###.#",
-            "#...#",
+            "#########################",
+            "############...##########",
+            "#############.###########",
+            "#######..........########",
+            "#######.########.########",
+            "#######.########.########",
+            "##.####.########.########",
+            "##......########.########",
+            "##.#############.##.#####",
+            "################....#####",
+            "################.##.#####",
+            "################.########",
+            "#########........########",
+            "#########.######.########",
+            "#########.#####...#######",
+            "#########.###############",
+            "#########.###############",
+            "########...##############",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################"
+            // "###.#",
+            // "#...#",
+            // "###.#",
+            // "###.#",
+            // "#...#",
           ],
           generated: []
         },
@@ -117,9 +135,7 @@
               this.generated.push(tmp);
             }
             this.generated[x][y]= init_value
-
-
-            dfs(this.generated, this.grid, vis, x, y, true)
+            dfs(this.generated, this.grid, vis, x, y, true, [0], 0)
           }
         },
         created () {
