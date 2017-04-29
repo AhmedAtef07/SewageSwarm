@@ -2,6 +2,21 @@
 <html>
 <head>
   <title>Flask-SocketIO Test</title>
+  <link rel="stylesheet" href="https://bootswatch.com/cosmo/bootstrap.min.css">
+  <style>
+    .grid-cell {
+      width: 20px;
+      height: 20px;
+      padding: 0;
+    }
+    .tunnel {
+      background-color: #2d3148;
+    }
+    .ground {
+      background-color: #020206;
+    }
+  </style>
+
   <script src="/assets/jquery.js"></script>
   <script src="/assets/socket.js"></script>
   <script src="/assets/vue.js"></script>
@@ -12,8 +27,42 @@
       var app = new Vue({
         el: '#el',
         data: {
-          asd: 'zxc',
-          messages: []
+          messages: [],
+          grid: [
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "###.#####################",
+            "###.#####################",
+            "###.#####################",
+            "###.#####################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################",
+            "#########################"
+          ]
+        },
+        methods: {
+          getClass (i, k) {
+            return {
+              tunnel: this.grid[i][k] == '.',
+              ground: this.grid[i][k] != '.'
+            }
+          }
         },
         created () {
           var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
@@ -47,13 +96,23 @@
 </head>
 <body>
   {% raw %}
-    <div id="el">
-      {{ asd }}
-      <ul>
-        <li v-for="(message, messageId) in messages">
-          {{ message }}
-        </li >
-      </ul>
+    <div class="container" id="el" style="padding-top: 40px">
+
+      <div class="row">
+        <div class="row" v-for="(row, i) in grid">
+          <div v-for="(cell, j) in row">
+            <div class="grid-cell" style="float: left" :class="getClass(i, j)"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <ul>
+          <li v-for="(message, messageId) in messages">
+            {{ message }}
+          </li >
+        </ul>
+      </div>
     </div>
   {% endraw %}
 </body>
