@@ -22,6 +22,26 @@
   <script src="/assets/vue.js"></script>
 
   <script>
+    dx= [0,0,1,-1]
+    dy= [1,-1,0,0]
+    max_diff= 10    // maximum difference between 2 neighbouring cells
+    init_value= 0   // initial value for array generation
+
+    function dfs(generated, grid, visited, x, y){
+      if(!visited[x][y]){
+        visited[x][y]= true
+        for(var i= 0; i< 4; i++){
+          var u= x+dx[i];
+          var v= y+dy[i];
+          if(u<grid.length && u>=0 && v<grid[0].length && v>=0 && grid[u][v]!='#'){
+            generated[u][v]= Math.random()*max_diff + generated[x][y]/2
+            dfs(generated, grid, visited, u, v);
+          }
+        }
+      }
+    }
+
+
     $().ready(() => {
       // INIT VUE
       var app = new Vue({
@@ -29,32 +49,38 @@
         data: {
           messages: [],
           grid: [
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "###.#####################",
-            "###.#####################",
-            "###.#####################",
-            "###.#####################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################"
-          ]
+            // "#########################",
+            // "############...##########",
+            // "#############.###########",
+            // "#######..........########",
+            // "#######.########.########",
+            // "#######.########.########",
+            // "##.####.########.########",
+            // "##......########.########",
+            // "##.#############.##.#####",
+            // "################....#####",
+            // "################.##.#####",
+            // "################.########",
+            // "#########........########",
+            // "#########.######.########",
+            // "#########.#####...#######",
+            // "#########.###############",
+            // "#########.###############",
+            // "########...##############",
+            // "#########################",
+            // "#########################",
+            // "#########################",
+            // "#########################",
+            // "#########################",
+            // "#########################",
+            // "#########################"
+            "###.#",
+            "#...#",
+            "###.#",
+            "###.#",
+            "#...#",
+          ],
+          generated: []
         },
         methods: {
           getClass (i, k) {
@@ -62,9 +88,40 @@
               tunnel: this.grid[i][k] == '.',
               ground: this.grid[i][k] != '.'
             }
+          },
+          generateRandValues (x, y) {
+            // x,y: initial cell node
+
+            // initializing visited array
+            var vis = [];
+            for(var i= 0; i< this.grid.length; i++){
+              var tmp= [];
+              for(var j= 0; j< this.grid[0].length; j++){
+                tmp.push(false);
+              }
+              vis.push(tmp);
+            }
+
+
+            // initializing generated number array
+            for(var i= 0; i< this.grid.length; i++){
+              var tmp= [];
+              for(var j= 0; j< this.grid[0].length; j++){
+                tmp.push(-1);
+              }
+              this.generated.push(tmp);
+            }
+            this.generated[x][y]= init_value
+
+
+            dfs(this.generated, this.grid, vis, x, y)
           }
         },
         created () {
+          
+          // To generate the random number 2d array, the parameters should be a tunnel cell
+          this.generateRandValues(0, 3);
+
           var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
           socket.emit('new-connection')
