@@ -7,6 +7,7 @@
     .grid-cell {
       width: 20px;
       height: 20px;
+      text-align: center;
       padding: 0;
     }
     .tunnel {
@@ -25,7 +26,7 @@
     dx= [0, 0, 1, -1]
     dy= [1, -1, 0 ,0]
     max_diff= 5    // the maximum difference between 2 neighbouring cells
-    init_value= 0   // initial value for array generation
+    init_value= 20   // initial value for array generation
 
     function dfs(generated, grid, visited, x, y, isIncreasing, prev_temperature, ind){
       console.log(x + " " + y + " " + " " + isIncreasing + " " + generated[x][y])
@@ -37,7 +38,7 @@
           if(isIncreasing){ // monotonically increasing
             generated[u][v]= Math.random()*2*max_diff + generated[x][y] - max_diff;
             var nextIsIncreasing= generated[u][v] > generated[x][y];
-            
+
             if(nextIsIncreasing) {  // Continue to push and increment the index
               prev_temperature.push(generated[u][v]);
               ind++;
@@ -45,13 +46,13 @@
               generated[u][v]= prev_temperature[ind];
               ind--;
             }
-            
+
             if(generated[u][v] === undefined){ // Unknown reason, Math.random returns undefined value
               generated[u][v]= Math.random()*2*max_diff + generated[x][y] - max_diff;
               console.log("checkleets")
             }
             dfs(generated, grid, visited, u, v, nextIsIncreasing, prev_temperature, ind);
-            
+
             if(nextIsIncreasing) {  // Reverse the action of the previous if
               prev_temperature.pop();
               ind--;
@@ -62,7 +63,7 @@
             if(ind >= 0){
               generated[u][v]= prev_temperature[ind];
             }
-            dfs(generated, grid, visited, u, v, false, prev_temperature, ind-1); 
+            dfs(generated, grid, visited, u, v, false, prev_temperature, ind-1);
           }
         }
       }
@@ -152,13 +153,15 @@
             }
             return tunnels[Math.floor(Math.random()*tunnels.length)];
           },
+          randomizeValue () {
+            // To generate the random number 2d array, the parameters should be a tunnel cell
+            rand_pt = this.getRandomStart()
+            // rand_pt= {x:0, y:3};
+            this.generateRandValues(rand_pt.x, rand_pt.y);
+          }
         },
         created () {
-          
-          // To generate the random number 2d array, the parameters should be a tunnel cell
-          rand_pt= this.getRandomStart()
-          // rand_pt= {x:0, y:3};
-          this.generateRandValues(rand_pt.x, rand_pt.y);
+          this.randomizeValue()
 
           for(var i= 0; i< this.grid.length; i++){
             console.log(this.grid[i])
@@ -204,9 +207,17 @@
       <div class="row">
         <div class="row" v-for="(row, i) in grid">
           <div v-for="(cell, j) in row">
-            <div class="grid-cell" style="float: left" :class="getClass(i, j)"></div>
+            <div class="grid-cell" style="float: left; color: red" :class="getClass(i, j)">
+              <div v-if="grid[i][j] == '.'" class="reading">
+                {{ Math.round(generated[i][j]) }}
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+
+      <div class="row options">
+        <button class="btn btn-primary" @click="randomizeValue()">Generate</button>
       </div>
 
       <div class="row">
