@@ -70,7 +70,8 @@
           generated: [],
           robots: [
             { i: 22, k: 9 }
-          ]
+          ],
+          sensors: ['Temperature', 'Humidity', 'Methan', 'H2S', 'Sound Intensity', 'Proximity']
         },
         computed: {
           movingRobot () {
@@ -227,26 +228,41 @@
     <div class="container" style="padding-top: 40px" id="el">
 
       <div class="row">
-        <div class="row" v-for="(row, i) in grid">
-          <div v-for="(cell, k) in row">
-            <div class="grid-cell" style="float: left; color: white" :class="getClass(i, k)">
-              <div class="reading" style="width: 100%; height: 100%;">
-                <div v-if="showReading && grid[i][k] == '.'"
-                     style="width: 100%; height: 100%;"
-                     :style="{ 'background-color': 'rgb(' + (Math.round(255.0 * ratio(i, k))) + ', 0, 0)' }">
-                  <div v-if="showRobots && cellContainsRobot(i, k)" style="width: 17px;">
-                    <img style="width: inherit;" src="http://www.clipartkid.com/images/6/robot-clip-art-book-covers-feJCV3-clipart.png">
+        <div class="col-xs-5">
+          <div class="row">
+            <div class="row" v-for="(row, i) in grid">
+              <div v-for="(cell, k) in row">
+                <div class="grid-cell" style="float: left; color: white" :class="getClass(i, k)">
+                  <div class="reading" style="width: 100%; height: 100%;">
+                    <div v-if="showReading && grid[i][k] == '.'"
+                         style="width: 100%; height: 100%;"
+                         :style="{ 'background-color': 'rgb(' + (Math.round(255.0 * ratio(i, k))) + ', 0, 0)' }">
+                      <div v-if="showRobots && cellContainsRobot(i, k)" style="width: 17px;">
+                        <img style="width: inherit;" src="http://www.clipartkid.com/images/6/robot-clip-art-book-covers-feJCV3-clipart.png">
+                      </div>
+                      {{ Math.round(generated[i][k]) }}
+                    </div>
                   </div>
-                  {{ Math.round(generated[i][k]) }}
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="row options">
-        <button class="btn btn-primary" @click="randomizeReading()">Generate</button>
+        <div class="col-xs-3">
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Sensor Readings</h3>
+            </div>
+            <div class="panel-body">
+              <div class="radio">
+                <label class="radio" v-for="sensor in sensors">
+                  <input type="radio" name="sensors" @click="randomizeReading()"> {{ sensor }}
+                </label>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary" @click="randomizeReading()">Generate</button>
+        </div>
       </div>
 
       <div class="row">
