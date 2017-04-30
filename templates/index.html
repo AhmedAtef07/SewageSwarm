@@ -15,7 +15,8 @@
       background-color: #2d3148;
     }
     .ground {
-      background-color: #020206;
+      background-color: #2c2c38;
+      /*background-color: #8c8585;*/
     }
   </style>
 
@@ -24,6 +25,9 @@
   <script src="/assets/vue.js"></script>
 
   <script>
+  var dx = [0, 0, 1, -1]
+  var dy = [1, -1, 0, 0]
+
     $().ready(() => {
       // INIT VUE
       var app = new Vue({
@@ -176,18 +180,38 @@
             var diffFromMin = curr - min
 
             return diffFromMin / range
+          },
+          dfs(x, y, vis) {
+            vis[x][y] = true
+            for(var i = 0; i < 4; i++){
+              var u = x + dx[i];
+              var v = y + dy[i];
+              if (isValidMovingCell(u, v)) {
+                this.movingRobot.i += dx[i]
+                this.movingRobot.k += dy[i]
+                setTimeout((u, v, vis) => this.dfs(u,v,vis) , 500)
+                // this.movingRobot.i-= dx[i]
+                // this.movingRobot.k-= dy[i]
+              }
+            }
+          },
+          makeColor (color) {
+            return '#' + ('00000' + (color | 0).toString(16)).substr(-6);
+          },
+          dfsAfterTime () {
+
           }
         },
         created () {
           this.randomizeReading()
 
-          for(var i= 0; i< this.grid.length; i++){
-            console.log(this.grid[i])
-          }
+          // for(var i= 0; i< this.grid.length; i++){
+            // console.log(this.grid[i])
+          // }
 
-          for(var i= 0; i< this.grid.length; i++){
-            console.log(this.generated[i])
-          }
+          // for(var i= 0; i< this.grid.length; i++){
+            // console.log(this.generated[i])
+          // }
 
           // var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
@@ -255,13 +279,13 @@
             </div>
             <div class="panel-body">
               <div class="radio">
-                <label class="radio" v-for="sensor in sensors">
+                <label class="radio" v-for="(sensor, id) in sensors">
                   <input type="radio" name="sensors" @click="randomizeReading()"> {{ sensor }}
                 </label>
               </div>
             </div>
           </div>
-          <button class="btn btn-primary" @click="randomizeReading()">Generate</button>
+          <!-- <button class="btn btn-primary" @click="randomizeReading()">Generate</button> -->
         </div>
       </div>
 
