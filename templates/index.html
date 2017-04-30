@@ -23,6 +23,7 @@
   <script src="/assets/jquery.js"></script>
   <script src="/assets/socket.js"></script>
   <script src="/assets/vue.js"></script>
+  <script src="/assets/moment.js"></script>
 
   <script>
   var dx = [0, 0, 1, -1]
@@ -30,7 +31,7 @@
 
     $().ready(() => {
       // INIT VUE
-      var app = new Vue({
+      new Vue({
         el: '#el',
         data: {
           messages: [],
@@ -39,30 +40,30 @@
           grid: [
             "#########################",
             "#########################",
-            "#############...#########",
+            "#########################",
             "#############...#########",
             "##############.##########",
             "########..........#######",
             "########.########.#######",
             "########.########.#######",
-            "##..####.########.#######",
+            "########.########.#######",
             "##.......########.#######",
-            "##..##.##########.##..###",
-            "######.##########.....###",
-            "######.##########.##..###",
+            "##..##.##########.##.####",
+            "######.##########....####",
+            "######.##########.##.####",
             "######.##########.#######",
             "######.###........#######",
-            "##..##.###.######.#######",
-            "##.....###.#####...######",
-            "##..##.###.#####...######",
+            "###.##.###.######.#######",
+            "###....###.#####...######",
+            "###.##.###.##############",
             "######.###.##############",
             "######.##...#############",
-            "######.##...#############",
-            "######.##############..##",
+            "######.##################",
+            "######.##################",
             "######.................##",
             "######.##############..##",
             "#####...#################",
-            "#####...#################",
+            "#########################",
             "#########################",
             "#########################"
             // "###.#",
@@ -75,7 +76,19 @@
           robots: [
             { i: 22, k: 9 }
           ],
-          sensors: ['Temperature', 'Humidity', 'Methan', 'H2S', 'Sound Intensity', 'Proximity']
+          sensors: ['Temperature', 'Humidity', 'Methan', 'H2S', 'Sound Intensity', 'Proximity'],
+          path: [],
+          pathI: 0,
+          readings: {
+            "NEW USER CONNECTED": { value: '', lastUpdated: null, count: '', sum: '' },
+            "Humidity": { value: 0, lastUpdated: null, count: 0, sum: 0 },
+            "Temp": { value: 0, lastUpdated: null, count: 0, sum: 0 },
+            "Smoke": { value: 0, lastUpdated: null, count: 0, sum: 0 },
+            "Carbon Monoxide": { value: 0, lastUpdated: null, count: 0, sum: 0 },
+            "Object Detection": { value: 0, lastUpdated: null, count: 0, sum: 0 },
+            "Sound": { value: 0, lastUpdated: null, count: 0, sum: 0 }
+          },
+          timerCurrentTime: Date.now()
         },
         computed: {
           movingRobot () {
@@ -181,15 +194,18 @@
 
             return diffFromMin / range
           },
-          dfs(x, y, vis) {
-            vis[x][y] = true
+          dfs (x, y, vis) {
+            if(vis[x][y] >= 1) return
+            vis[x][y]++
+            // if (this.path.length > 1000) return
+
             for(var i = 0; i < 4; i++){
-              var u = x + dx[i];
-              var v = y + dy[i];
-              if (isValidMovingCell(u, v)) {
-                this.movingRobot.i += dx[i]
-                this.movingRobot.k += dy[i]
-                setTimeout((u, v, vis) => this.dfs(u,v,vis) , 500)
+              if (this.isValidMovingCell(x + dx[i], y + dy[i])) {
+                // this.movingRobot.i += dx[i]
+                // this.movingRobot.k += dy[i]
+                this.path.push([x, y])
+                this.dfs(x + dx[i], y + dy[i], vis)
+                this.path.push([x, y])
                 // this.movingRobot.i-= dx[i]
                 // this.movingRobot.k-= dy[i]
               }
@@ -200,48 +216,77 @@
           },
           dfsAfterTime () {
 
+          },
+          getElapsedTime (time) {
+            return window.moment(time).diff(window.moment())
+          },
+          moveRobotToTheNextCell (i) {
+            this.movingRobot.i = this.path[i][0]
+            this.movingRobot.k = this.path[i][1]
+            setTimeout(() => {
+              this.moveRobotToTheNextCell(i + 1)
+            }, 150);
           }
         },
         created () {
           this.randomizeReading()
 
-          // for(var i= 0; i< this.grid.length; i++){
-            // console.log(this.grid[i])
-          // }
+          var vis = [];
+          for(var i= 0; i< this.grid.length; i++){
+            var tmp= [];
+            for(var j= 0; j< this.grid[0].length; j++){
+              tmp.push(0);
+            }
+            vis.push(tmp);
+          }
 
-          // for(var i= 0; i< this.grid.length; i++){
-            // console.log(this.generated[i])
-          // }
+          this.dfs(this.movingRobot.i, this.movingRobot.k, vis)
 
-          // var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+          var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
-          // socket.emit('new-connection')
-          // socket.on('readings', (data) => {
-          //   console.log(data)
-          //   this.messages.push(data)
-          // });
+          socket.emit('new-connection')
+          socket.on('readings', (data) => {
+            console.log(data)
+            this.messages.push(data)
 
-          // var ping_pong_times = [];
-          // var start_time;
-          // window.setInterval(function() {
-          //   start_time = (new Date).getTime();
-          //   socket.emit('my_ping');
-          // }, 1000);
-          // socket.on('my_pong', function() {
-          //   var latency = (new Date).getTime() - start_time;
-          //   ping_pong_times.push(latency);
-          //   console.log(latency)
-          //   ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
-          //   var sum = 0;
-          //   for (var i = 0; i < ping_pong_times.length; i++)
-          //       sum += ping_pong_times[i];
-          //   $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
-          // });
+            var dataSplitted = data.split(":")
+            var key = dataSplitted[0]
+            var value = Number(dataSplitted[1])
+
+            console.log(key, value)
+            if (this.readings.hasOwnProperty(key)) {
+              this.readings[key].value = value
+              this.readings[key].lastUpdated = Date.now()
+              this.readings[key].count++
+              this.readings[key].sum += value
+            }
+
+          });
+
+          var ping_pong_times = [];
+          var start_time;
+          window.setInterval(function() {
+            start_time = (new Date).getTime();
+            socket.emit('my_ping');
+          }, 1000);
+          socket.on('my_pong', function() {
+            var latency = (new Date).getTime() - start_time;
+            ping_pong_times.push(latency);
+            console.log(latency)
+            ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
+            var sum = 0;
+            for (var i = 0; i < ping_pong_times.length; i++)
+                sum += ping_pong_times[i];
+            $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
+          });
         },
         mounted () {
           window.addEventListener('keydown', event => {
             this.keyDown(event)
           })
+          setInterval(() => {
+            this.timerCurrentTime = Date.now()
+          }, 200)
         }
       })
     });
@@ -272,29 +317,68 @@
             </div>
           </div>
         </div>
-        <div class="col-xs-3">
-          <div class="panel panel-primary">
-            <div class="panel-heading">
-              <h3 class="panel-title">Sensor Readings</h3>
-            </div>
-            <div class="panel-body">
-              <div class="radio">
-                <label class="radio" v-for="(sensor, id) in sensors">
-                  <input type="radio" name="sensors" @click="randomizeReading()"> {{ sensor }}
-                </label>
+        <div class="col-xs-7">
+          <div class="row">
+            <div class="col-xs-12">
+
+              <div class="panel panel-primary">
+                <div class="panel-heading">
+                  <h3 class="panel-title">Live Readings</h3>
+                </div>
+                <div class="panel-body">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Type</th>
+                        <th>Value</th>
+                        <th># Samples</th>
+                        <th>Average</th>
+                        <th>Last Reading</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(reading, readingKey) in readings" v-if="reading.lastUpdated">
+                        <td>{{ readingKey }}</td>
+                        <td>{{ reading.value }}</td>
+                        <td>{{ reading.count }}</td>
+                        <td>{{ (reading.sum / reading.count).toFixed(2) }}</td>
+                        <td>{{ Math.max(timerCurrentTime - reading.lastUpdated, 0) / 1000 }} seconds ago</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
+
           </div>
-          <!-- <button class="btn btn-primary" @click="randomizeReading()">Generate</button> -->
+          <div class="row">
+            <div class="col-xs-12">
+
+              <div class="panel panel-primary">
+                <div class="panel-heading">
+                  <h3 class="panel-title">Sensor Readings</h3>
+                </div>
+                <div class="panel-body">
+                  <div class="radio">
+                    <label class="radio" v-for="(sensor, id) in sensors">
+                      <input type="radio" name="sensors" @click="randomizeReading()"> {{ sensor }}
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <!-- <button class="btn btn-primary" @click="randomizeReading()">Generate</button> -->
+              <button class="btn btn-primary" @click="moveRobotToTheNextCell(0)">Explore</button>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="row">
-        <ul>
+        <!-- <ul>
           <li v-for="(message, messageId) in messages">
             {{ message }}
           </li >
-        </ul>
+        </ul> -->
       </div>
     </div>
   {% endraw %}

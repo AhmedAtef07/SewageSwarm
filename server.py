@@ -3,7 +3,7 @@ from flask_socketio import SocketIO, emit
 import serial
 
 app = Flask(__name__, static_folder='assets')
-socketio = SocketIO(app)
+socketio = SocketIO(app, ping_timeout=5400)
 
 
 @app.route('/')
@@ -18,8 +18,12 @@ def test_message():
 
   ser = serial.Serial('/dev/ttyUSB0')
   while True:
-    reading = ser.readline()
-    emit('readings', reading)
+    try:
+      reading = ser.readline()
+      emit('readings', reading)
+    except Exception as e:
+      print '############## Some error happened but we suppressed it! ha!', e
+
 
 
 if __name__ == '__main__':
