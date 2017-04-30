@@ -125,7 +125,7 @@
                 }
                 vis.push(tmp)
               }
-              
+
               this.dfs(this.movingRobot.i, this.movingRobot.k, vis)
             }
 
@@ -143,11 +143,12 @@
               var u= x+dx[i];
               var v= y+dy[i];
               if(u<this.grid.length && u>=0 && v<this.grid[0].length && v>=0 && !vis[u][v] && this.grid[u][v]=='.'){
-                this.movingRobot.i+= dx[i]
-                this.movingRobot.k+= dy[i]
-                this.dfs(u,v,vis)
-                this.movingRobot.i-= dx[i]
-                this.movingRobot.k-= dy[i]
+                this.movingRobot.i += dx[i]
+                this.movingRobot.k += dy[i]
+                // console.log('hey nabil')
+                setTimeout(() => this.dfs(u,v,vis) , 500)
+                // this.movingRobot.i-= dx[i]
+                // this.movingRobot.k-= dy[i]
               }
             }
           }
