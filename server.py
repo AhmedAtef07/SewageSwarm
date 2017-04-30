@@ -10,14 +10,14 @@ socketio = SocketIO(app, ping_timeout=5400)
 def index():
   return render_template('index.html')
 
-has_any_conn = False
+# has_any_conn = False
 
 @socketio.on('new-connection')
 def test_message():
   print '######### NEW USER CONNECTED #########'
-  if has_any_conn:
-    return
-  has_any_conn = True
+  # if has_any_conn:
+    # return
+  # has_any_conn = True
   emit('readings', 'New User Connected')
 
   ser = serial.Serial('/dev/ttyUSB0')

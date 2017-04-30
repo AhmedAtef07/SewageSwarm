@@ -80,13 +80,13 @@
           path: [],
           pathI: 0,
           readings: {
-            "NEW USER CONNECTED": { value: '', lastUpdated: null, count: '', sum: '' },
-            "Humidity": { value: 0, lastUpdated: null, count: 0, sum: 0 },
-            "Temp": { value: 0, lastUpdated: null, count: 0, sum: 0 },
-            "Smoke": { value: 0, lastUpdated: null, count: 0, sum: 0 },
-            "Carbon Monoxide": { value: 0, lastUpdated: null, count: 0, sum: 0 },
-            "Object Detection": { value: 0, lastUpdated: null, count: 0, sum: 0 },
-            "Sound": { value: 0, lastUpdated: null, count: 0, sum: 0 }
+            "NEW USER CONNECTED": { value: '', lastUpdated: null, count: '', sum: '', max: -1 << 30, min: 1 << 30 },
+            "Humidity": { value: 0, lastUpdated: null, count: 0, sum: 0, max: -1 << 30, min: 1 << 30 },
+            "Temp": { value: 0, lastUpdated: null, count: 0, sum: 0, max: -1 << 30, min: 1 << 30 },
+            "Smoke": { value: 0, lastUpdated: null, count: 0, sum: 0, max: -1 << 30, min: 1 << 30 },
+            "Carbon Monoxide": { value: 0, lastUpdated: null, count: 0, sum: 0, max: -1 << 30, min: 1 << 30 },
+            "Object Detection": { value: 0, lastUpdated: null, count: 0, sum: 0, max: -1 << 30, min: 1 << 30 },
+            "Sound": { value: 0, lastUpdated: null, count: 0, sum: 0, max: -1 << 30, min: 1 << 30 }
           },
           timerCurrentTime: Date.now(),
           vis: []
@@ -237,6 +237,8 @@
               this.readings[key].lastUpdated = Date.now()
               this.readings[key].count++
               this.readings[key].sum += value
+              this.readings[key].max = Math.max(this.readings[key].max, value)
+              this.readings[key].min = Math.min(this.readings[key].min, value)
             }
 
           });
@@ -273,6 +275,12 @@
 <body>
   {% raw %}
     <div class="container" style="padding-top: 40px" id="el">
+      <!-- <div class="row"> -->
+        <ul class="nav nav-tabs">
+          <li role="presentation" class="active"><a href="#">Smart City Simulation</a></li>
+          <li role="presentation"><a href="#">Real Time Simulation</a></li>
+        </ul>
+      <!-- </div> -->
 
       <div class="row">
         <div class="col-xs-5">
@@ -313,6 +321,8 @@
                         <th>Value</th>
                         <th># Samples</th>
                         <th>Average</th>
+                        <th>Min</th>
+                        <th>Max</th>
                         <th>Last Reading</th>
                       </tr>
                     </thead>
@@ -322,6 +332,8 @@
                         <td>{{ reading.value }}</td>
                         <td>{{ reading.count }}</td>
                         <td>{{ (reading.sum / reading.count).toFixed(2) }}</td>
+                        <td>{{ reading.min }}</td>
+                        <td>{{ reading.max }}</td>
                         <td>{{ Math.max(timerCurrentTime - reading.lastUpdated, 0) / 1000 }} seconds ago</td>
                       </tr>
                     </tbody>
