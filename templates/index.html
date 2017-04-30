@@ -77,7 +77,7 @@
         el: '#el',
         data: {
           messages: [],
-          showReading: false,
+          showReading: true,
           showRobots: true,
           grid: [
             "#########################",
@@ -246,11 +246,13 @@
         <div class="row" v-for="(row, i) in grid">
           <div v-for="(cell, k) in row">
             <div class="grid-cell" style="float: left; color: red" :class="getClass(i, k)">
-              <div v-if="showReading" v-if="grid[i][k] == '.'" class="reading">
-                {{ Math.round(generated[i][k]) }}
-              </div>
-              <div v-if="showRobots && cellContainsRobot(i, k)" style="width: 17px;">
-                <img style="width: inherit;" src="http://www.clipartkid.com/images/6/robot-clip-art-book-covers-feJCV3-clipart.png">
+              <div class="reading" style="width: 100%; height: 100%;">
+                <div v-if="showReading && grid[i][k] == '.'" style="width: 100%; height: 100%; background-color: red">
+                  <div v-if="showRobots && cellContainsRobot(i, k)" style="width: 17px;">
+                    <img style="width: inherit;" src="http://www.clipartkid.com/images/6/robot-clip-art-book-covers-feJCV3-clipart.png">
+                  </div>
+                </div>
+                <!-- {{ Math.round(generated[i][k]) }} -->
               </div>
             </div>
           </div>
