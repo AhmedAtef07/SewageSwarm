@@ -24,7 +24,8 @@
   <script src="/assets/vue.js"></script>
 
   <script>
-
+  var dx= [0,0,1,-1]
+  var dy= [1,-1,0,0]
     $().ready(() => {
       // INIT VUE
       var app = new Vue({
@@ -115,6 +116,18 @@
             if (event.key == 'ArrowDown') newI += 1
             if (event.key == 'ArrowRight') newK += 1
             if (event.key == 'ArrowLeft') newK -= 1
+            if(event.key == 'Enter'){
+              vis= []
+              for(var i= 0; i< this.grid.length; i++){
+                tmp= []
+                for(var j= 0; j< this.grid[0].length; j++){
+                  tmp.push(false)
+                }
+                vis.push(tmp)
+              }
+              
+              this.dfs(this.movingRobot.i, this.movingRobot.k, vis)
+            }
 
             if (this.isValidMovingCell(newI, newK)) {
               this.movingRobot.i = newI
@@ -123,7 +136,22 @@
           },
           isValidMovingCell (i, k) {
             return this.grid[i][k] == '.'
+          },
+          dfs(x,y,vis){
+            vis[x][y]= true
+            for(var i= 0; i< 4; i++){
+              var u= x+dx[i];
+              var v= y+dy[i];
+              if(u<this.grid.length && u>=0 && v<this.grid[0].length && v>=0 && !vis[u][v] && this.grid[u][v]=='.'){
+                this.movingRobot.i+= dx[i]
+                this.movingRobot.k+= dy[i]
+                this.dfs(u,v,vis)
+                this.movingRobot.i-= dx[i]
+                this.movingRobot.k-= dy[i]
+              }
+            }
           }
+
         },
         created () {
           this.randomizeValue()
