@@ -24,53 +24,6 @@
   <script src="/assets/vue.js"></script>
 
   <script>
-    dx = [0, 0, 1, -1]
-    dy = [1, -1, 0 ,0]
-    max_diff = 5    // the maximum difference between 2 neighbouring cells
-    init_value = 20   // initial value for array generation
-
-    function dfs(generated, grid, visited, x, y, isIncreasing, prev_temperature, ind){
-      console.log(x + " " + y + " " + " " + isIncreasing + " " + generated[x][y])
-      visited[x][y]= true
-      for(var i= 0; i< 4; i++){
-        var u= x+dx[i];
-        var v= y+dy[i];
-        if(u<grid.length && u>=0 && v<grid[0].length && v>=0 && grid[u][v]!='#' && !visited[u][v]){
-          if(isIncreasing){ // monotonically increasing
-            generated[u][v]= Math.random()*2*max_diff + generated[x][y] - max_diff;
-            var nextIsIncreasing= generated[u][v] > generated[x][y];
-
-            if(nextIsIncreasing) {  // Continue to push and increment the index
-              prev_temperature.push(generated[u][v]);
-              ind++;
-            } else { // Starting from this point you must take the last value from the prev_temp and decrement so the next cell does the same
-              generated[u][v]= prev_temperature[ind];
-              ind--;
-            }
-
-            if(generated[u][v] === undefined){ // Unknown reason, Math.random returns undefined value
-              generated[u][v]= Math.random()*2*max_diff + generated[x][y] - max_diff;
-              console.log("checkleets")
-            }
-            dfs(generated, grid, visited, u, v, nextIsIncreasing, prev_temperature, ind);
-
-            if(nextIsIncreasing) {  // Reverse the action of the previous if
-              prev_temperature.pop();
-              ind--;
-            }
-
-          } else { // monotonically decreasing
-            generated[u][v]= Math.random()*max_diff + generated[x][y] - max_diff
-            if(ind >= 0){
-              generated[u][v]= prev_temperature[ind];
-            }
-            dfs(generated, grid, visited, u, v, false, prev_temperature, ind-1);
-          }
-        }
-      }
-    }
-
-
     $().ready(() => {
       // INIT VUE
       var app = new Vue({
@@ -169,9 +122,23 @@
           },
           randomizeReading () {
             // To generate the random number 2d array, the parameters should be a tunnel cell
-            rand_pt = this.getRandomStart()
-            // rand_pt= {x:0, y:3};
-            this.generateRandValues(rand_pt.x, rand_pt.y);
+
+            // initializing generated number array
+            for(var i= 0; i< this.grid.length; i++){
+              var tmp= [];
+              for(var j= 0; j< this.grid[0].length; j++){
+                tmp.push(-1);
+              }
+              this.generated.push(tmp);
+            }
+
+            for(var i= 0; i< this.grid.length; i++){
+              for(var j= 0; j< this.grid[0].length; j++){
+                if(this.grid[i][j] == '.'){
+                  this.generated[i][j]= -3*Math.log(Math.random());
+                }
+              }
+            }
           },
           cellContainsRobot (i, k) {
             return this.robots.reduce((acc, r) => acc || r.i == i && r.k == k, false)
@@ -191,6 +158,23 @@
           },
           isValidMovingCell (i, k) {
             return this.grid[i][k] == '.'
+          },
+          maxArrayValue (array) {
+            return Math.max(...[].concat.apply([], array))
+          },
+          minArrayValue (array) {
+            return Math.min(...[].concat.apply([], array))
+          },
+          ratio (i, k) {
+            max = this.maxArrayValue(this.generated)
+            min = this.minArrayValue(this.generated)
+
+            var curr = this.generated[i][k]
+
+            var range = max - min
+            var diffFromMin = curr - min
+
+            return diffFromMin / range
           }
         },
         created () {
@@ -245,14 +229,16 @@
       <div class="row">
         <div class="row" v-for="(row, i) in grid">
           <div v-for="(cell, k) in row">
-            <div class="grid-cell" style="float: left; color: red" :class="getClass(i, k)">
+            <div class="grid-cell" style="float: left; color: white" :class="getClass(i, k)">
               <div class="reading" style="width: 100%; height: 100%;">
-                <div v-if="showReading && grid[i][k] == '.'" style="width: 100%; height: 100%; background-color: red">
+                <div v-if="showReading && grid[i][k] == '.'"
+                     style="width: 100%; height: 100%;"
+                     :style="{ 'background-color': 'rgb(' + (Math.round(255.0 * ratio(i, k))) + ', 0, 0)' }">
                   <div v-if="showRobots && cellContainsRobot(i, k)" style="width: 17px;">
                     <img style="width: inherit;" src="http://www.clipartkid.com/images/6/robot-clip-art-book-covers-feJCV3-clipart.png">
                   </div>
+                  {{ Math.round(generated[i][k]) }}
                 </div>
-                <!-- {{ Math.round(generated[i][k]) }} -->
               </div>
             </div>
           </div>
