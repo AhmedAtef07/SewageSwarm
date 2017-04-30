@@ -88,7 +88,8 @@
             "Object Detection": { value: 0, lastUpdated: null, count: 0, sum: 0 },
             "Sound": { value: 0, lastUpdated: null, count: 0, sum: 0 }
           },
-          timerCurrentTime: Date.now()
+          timerCurrentTime: Date.now(),
+          vis: []
         },
         computed: {
           movingRobot () {
@@ -101,31 +102,6 @@
               tunnel: this.grid[i][k] == '.',
               ground: this.grid[i][k] != '.'
             }
-          },
-          generateRandValues (x, y) {
-            // x,y: initial cell node
-
-            // initializing visited array
-            var vis = [];
-            for(var i= 0; i< this.grid.length; i++){
-              var tmp= [];
-              for(var j= 0; j< this.grid[0].length; j++){
-                tmp.push(false);
-              }
-              vis.push(tmp);
-            }
-
-
-            // initializing generated number array
-            for(var i= 0; i< this.grid.length; i++){
-              var tmp= [];
-              for(var j= 0; j< this.grid[0].length; j++){
-                tmp.push(-1);
-              }
-              this.generated.push(tmp);
-            }
-            this.generated[x][y] = init_value
-            dfs(this.generated, this.grid, vis, x, y, true, [0], 0)
           },
           getRandomStart () {
             var tunnels= []
@@ -194,9 +170,9 @@
 
             return diffFromMin / range
           },
-          dfs (x, y, vis) {
-            if(vis[x][y] >= 1) return
-            vis[x][y]++
+          dfs (x, y) {
+            if(this.vis[x][y] >= 1) return
+            this.vis[x][y]++
             // if (this.path.length > 1000) return
 
             for(var i = 0; i < 4; i++){
@@ -204,7 +180,7 @@
                 // this.movingRobot.i += dx[i]
                 // this.movingRobot.k += dy[i]
                 this.path.push([x, y])
-                this.dfs(x + dx[i], y + dy[i], vis)
+                this.dfs(x + dx[i], y + dy[i])
                 this.path.push([x, y])
                 // this.movingRobot.i-= dx[i]
                 // this.movingRobot.k-= dy[i]
@@ -231,16 +207,18 @@
         created () {
           this.randomizeReading()
 
-          var vis = [];
+          this.vis = [];
           for(var i= 0; i< this.grid.length; i++){
             var tmp= [];
             for(var j= 0; j< this.grid[0].length; j++){
               tmp.push(0);
             }
-            vis.push(tmp);
+            this.vis.push(tmp);
           }
 
-          this.dfs(this.movingRobot.i, this.movingRobot.k, vis)
+          this.dfs(this.movingRobot.i, this.movingRobot.k)
+
+          // OPEN THE SOCKET LIB
 
           var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
@@ -276,7 +254,7 @@
             ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
             var sum = 0;
             for (var i = 0; i < ping_pong_times.length; i++)
-                sum += ping_pong_times[i];
+              sum += ping_pong_times[i];
             $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
           });
         },
@@ -309,7 +287,9 @@
                       <div v-if="showRobots && cellContainsRobot(i, k)" style="width: 17px;">
                         <img style="width: inherit;" src="http://www.clipartkid.com/images/6/robot-clip-art-book-covers-feJCV3-clipart.png">
                       </div>
-                      {{ Math.round(generated[i][k]) }}
+                      <div v-if="vis[i][k] > 0">
+                        {{ Math.round(generated[i][k]) }}
+                      </div>
                     </div>
                   </div>
                 </div>
