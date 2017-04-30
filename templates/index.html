@@ -9,6 +9,7 @@
       height: 20px;
       text-align: center;
       padding: 0;
+      font-size: small;
     }
     .tunnel {
       background-color: #2d3148;
@@ -30,30 +31,35 @@
         el: '#el',
         data: {
           messages: [],
+          showReading: false,
+          showRobots: true,
           grid: [
             "#########################",
-            "############...##########",
-            "#############.###########",
-            "#######..........########",
-            "#######.########.########",
-            "#######.########.########",
-            "##.####.########.########",
-            "##......########.########",
-            "##.#############.##.#####",
-            "################....#####",
-            "################.##.#####",
-            "################.########",
-            "#########........########",
-            "#########.######.########",
-            "#########.#####...#######",
-            "#########.###############",
-            "#########.###############",
-            "########...##############",
             "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
-            "#########################",
+            "#############...#########",
+            "#############...#########",
+            "##############.##########",
+            "########..........#######",
+            "########.########.#######",
+            "########.########.#######",
+            "##..####.########.#######",
+            "##.......########.#######",
+            "##..##.##########.##..###",
+            "######.##########.....###",
+            "######.##########.##..###",
+            "######.##########.#######",
+            "######.###........#######",
+            "##..##.###.######.#######",
+            "##.....###.#####...######",
+            "##..##.###.#####...######",
+            "######.###.##############",
+            "######.##...#############",
+            "######.##...#############",
+            "######.##############..##",
+            "######.................##",
+            "######.##############..##",
+            "#####...#################",
+            "#####...#################",
             "#########################",
             "#########################"
             // "###.#",
@@ -63,6 +69,14 @@
             // "#...#",
           ],
           generated: [],
+          robots: [
+            { i: 22, k: 9 }
+          ]
+        },
+        computed: {
+          movingRobot () {
+            return this.robots[0]
+          }
         },
         methods: {
           getClass (i, k) {
@@ -90,6 +104,25 @@
                 }
               }
             }
+          },
+          cellContainsRobot (i, k) {
+            return this.robots.reduce((acc, r) => acc || r.i == i && r.k == k, false)
+          },
+          keyDown (event) {
+            var newI = this.movingRobot.i
+            var newK = this.movingRobot.k
+            if (event.key == 'ArrowUp') newI -= 1
+            if (event.key == 'ArrowDown') newI += 1
+            if (event.key == 'ArrowRight') newK += 1
+            if (event.key == 'ArrowLeft') newK -= 1
+
+            if (this.isValidMovingCell(newI, newK)) {
+              this.movingRobot.i = newI
+              this.movingRobot.k = newK
+            }
+          },
+          isValidMovingCell (i, k) {
+            return this.grid[i][k] == '.'
           }
         },
         created () {
@@ -103,30 +136,35 @@
             console.log(this.generated[i])
           }
 
-          var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+          // var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
-          socket.emit('new-connection')
-          socket.on('readings', (data) => {
-            console.log(data)
-            this.messages.push(data)
-          });
+          // socket.emit('new-connection')
+          // socket.on('readings', (data) => {
+          //   console.log(data)
+          //   this.messages.push(data)
+          // });
 
-          var ping_pong_times = [];
-          var start_time;
-          window.setInterval(function() {
-            start_time = (new Date).getTime();
-            socket.emit('my_ping');
-          }, 1000);
-          socket.on('my_pong', function() {
-            var latency = (new Date).getTime() - start_time;
-            ping_pong_times.push(latency);
-            console.log(latency)
-            ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
-            var sum = 0;
-            for (var i = 0; i < ping_pong_times.length; i++)
-                sum += ping_pong_times[i];
-            $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
-          });
+          // var ping_pong_times = [];
+          // var start_time;
+          // window.setInterval(function() {
+          //   start_time = (new Date).getTime();
+          //   socket.emit('my_ping');
+          // }, 1000);
+          // socket.on('my_pong', function() {
+          //   var latency = (new Date).getTime() - start_time;
+          //   ping_pong_times.push(latency);
+          //   console.log(latency)
+          //   ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
+          //   var sum = 0;
+          //   for (var i = 0; i < ping_pong_times.length; i++)
+          //       sum += ping_pong_times[i];
+          //   $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
+          // });
+        },
+        mounted () {
+          window.addEventListener('keydown', event => {
+            this.keyDown(event)
+          })
         }
       })
     });
@@ -134,14 +172,17 @@
 </head>
 <body>
   {% raw %}
-    <div class="container" id="el" style="padding-top: 40px">
+    <div class="container" style="padding-top: 40px" id="el">
 
       <div class="row">
         <div class="row" v-for="(row, i) in grid">
-          <div v-for="(cell, j) in row">
-            <div class="grid-cell" style="float: left; color: red" :class="getClass(i, j)">
-              <div v-if="grid[i][j] == '.'" class="reading">
-                {{ Math.round(generated[i][j]) }}
+          <div v-for="(cell, k) in row">
+            <div class="grid-cell" style="float: left; color: red" :class="getClass(i, k)">
+              <div v-if="showReading" v-if="grid[i][k] == '.'" class="reading">
+                {{ Math.round(generated[i][k]) }}
+              </div>
+              <div v-if="showRobots && cellContainsRobot(i, k)" style="width: 17px;">
+                <img style="width: inherit;" src="http://www.clipartkid.com/images/6/robot-clip-art-book-covers-feJCV3-clipart.png">
               </div>
             </div>
           </div>
@@ -149,7 +190,7 @@
       </div>
 
       <div class="row options">
-        <button class="btn btn-primary" @click="randomizeValue()">Generate</button>
+        <button class="btn btn-primary" @click="randomizeReading()">Generate</button>
       </div>
 
       <div class="row">
