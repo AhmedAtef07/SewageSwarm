@@ -46,13 +46,17 @@
               ind--;
             }
             
+            if(generated[u][v] === undefined){ // Unknown reason, Math.random returns undefined value
+              generated[u][v]= Math.random()*2*max_diff + generated[x][y] - max_diff;
+              console.log("checkleets")
+            }
             dfs(generated, grid, visited, u, v, nextIsIncreasing, prev_temperature, ind);
             
             if(nextIsIncreasing) {  // Reverse the action of the previous if
               prev_temperature.pop();
               ind--;
             }
-            
+
           } else { // monotonically decreasing
             generated[u][v]= Math.random()*max_diff + generated[x][y] - max_diff
             if(ind >= 0){
@@ -103,7 +107,7 @@
             // "###.#",
             // "#...#",
           ],
-          generated: []
+          generated: [],
         },
         methods: {
           getClass (i, k) {
@@ -136,12 +140,25 @@
             }
             this.generated[x][y]= init_value
             dfs(this.generated, this.grid, vis, x, y, true, [0], 0)
-          }
+          },
+          getRandomStart () {
+            var tunnels= []
+            for(var i= 0; i< this.grid.length; i++){
+              for(var j= 0; j< this.grid[0].length; j++){
+                if(this.grid[i][j] == '.'){
+                  tunnels.push({x: i, y: j});
+                }
+              }
+            }
+            return tunnels[Math.floor(Math.random()*tunnels.length)];
+          },
         },
         created () {
           
           // To generate the random number 2d array, the parameters should be a tunnel cell
-          this.generateRandValues(0, 3);
+          rand_pt= this.getRandomStart()
+          // rand_pt= {x:0, y:3};
+          this.generateRandValues(rand_pt.x, rand_pt.y);
 
           for(var i= 0; i< this.grid.length; i++){
             console.log(this.grid[i])
